@@ -201,7 +201,7 @@ cleanup *FLAGS:
 @docker-build:
     uv lock
     just _cleanup_pycache
-    docker build --build-arg PYTHON_VERSION=$(cat .python-version) -t $PROJECT_NAME - .
+    docker build --build-arg PYTHON_VERSION=$(cat .python-version) -t $PROJECT_NAME .
 
 # run the docker image, cli arguments can be passed, container /output is mounted to ./output
 [group('docker')]

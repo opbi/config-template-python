@@ -5,14 +5,7 @@ ARG PYTHON_VERSION=3.13
 ##  BUILD STAGE
 ##
 
-FROM ${DOCKER_IMAGE_HOST}python:${PYTHON_VERSION}-alpine AS builder
-
-#
-#   system packages
-#
-RUN apk add --no-cache curl ca-certificates \
- && curl -LsSf https://astral.sh/uv/install.sh | sh -s -- --yes \
- && mv /root/.local/bin/uv* /usr/local/bin/
+FROM ${DOCKER_IMAGE_HOST}ghcr.io/astral-sh/uv:python${PYTHON_VERSION}-alpine AS builder
 
 #
 #   dependencies
@@ -20,9 +13,7 @@ RUN apk add --no-cache curl ca-certificates \
 COPY pyproject.toml uv.lock /
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync ----compile-bytecode --group test && \
-    (uv sync ----compile-bytecode --only-group shared || true) && \
-    (uv sync ----compile-bytecode --only-group peer || true)
+    uv sync --compile-bytecode --no-dev
 
 
 ##

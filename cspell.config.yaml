@@ -122,6 +122,7 @@ words:
   - pyproject
   - pystac
   - pytest
+  - pythonpath
   - PYTHONPATH
   - pytorch
   - radiometrically
@@ -135,6 +136,7 @@ words:
   - Ruvuma
   - secretkey
   - secretname
+  - setuptools
   - shapefile
   - shortwave
   - skipif

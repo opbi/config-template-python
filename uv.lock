@@ -797,14 +797,12 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "ipykernel" },
     { name = "mypy" },
     { name = "nbstripout" },
     { name = "pre-commit" },
     { name = "python-dotenv", extra = ["cli"] },
     { name = "ruff" },
-]
-notebook = [
-    { name = "ipykernel" },
 ]
 shared = [
     { name = "azure-storage-blob" },
@@ -817,6 +815,7 @@ test = [
     { name = "pytest-env" },
     { name = "pytest-only" },
     { name = "pytest-picked" },
+    { name = "setuptools" },
 ]
 typing = [
     { name = "types-requests" },
@@ -827,13 +826,13 @@ requires-dist = [{ name = "pydantic", specifier = ">=2.11.4" }]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "ipykernel", specifier = ">=6.29.4,<7.0.0" },
     { name = "mypy", specifier = ">=1.9.0,<2.0.0" },
     { name = "nbstripout", specifier = ">=0.7.1,<1.0.0" },
     { name = "pre-commit", specifier = ">=3.5.0,<4.0.0" },
     { name = "python-dotenv", extras = ["cli"], specifier = ">=1.0.1,<2.0.0" },
     { name = "ruff", specifier = ">=0.5.4,<1.0.0" },
 ]
-notebook = [{ name = "ipykernel", specifier = ">=6.29.4,<7.0.0" }]
 shared = [
     { name = "azure-storage-blob", specifier = ">=12.21.0,<13.0.0" },
     { name = "tqdm", specifier = ">=4.67.1,<5.0.0" },
@@ -845,6 +844,7 @@ test = [
     { name = "pytest-env", specifier = ">=1.1.5" },
     { name = "pytest-only", specifier = ">=2.1.2" },
     { name = "pytest-picked", specifier = ">=0.5.1" },
+    { name = "setuptools", specifier = ">=80.7.1" },
 ]
 typing = [{ name = "types-requests", specifier = ">=2.32.0.20240712,<3.0.0" }]
 
@@ -1016,6 +1016,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/d9/2b/162fa86d2639076667c9aa59196c020dc6d7023ac8f342416c2f5ec4bda0/ruff-0.11.10-py3-none-win32.whl", hash = "sha256:dc061a98d32a97211af7e7f3fa1d4ca2fcf919fb96c28f39551f35fc55bdbc19", size = 10494958 },
     { url = "https://files.pythonhosted.org/packages/24/f3/66643d8f32f50a4b0d09a4832b7d919145ee2b944d43e604fbd7c144d175/ruff-0.11.10-py3-none-win_amd64.whl", hash = "sha256:5cc725fbb4d25b0f185cb42df07ab6b76c4489b4bfb740a175f3a59c70e8a224", size = 11650285 },
     { url = "https://files.pythonhosted.org/packages/95/3a/2e8704d19f376c799748ff9cb041225c1d59f3e7711bc5596c8cfdc24925/ruff-0.11.10-py3-none-win_arm64.whl", hash = "sha256:ef69637b35fb8b210743926778d0e45e1bffa850a7c61e428c6b971549b5f5d1", size = 10765278 },
+]
+
+[[package]]
+name = "setuptools"
+version = "80.7.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9e/8b/dc1773e8e5d07fd27c1632c45c1de856ac3dbf09c0147f782ca6d990cf15/setuptools-80.7.1.tar.gz", hash = "sha256:f6ffc5f0142b1bd8d0ca94ee91b30c0ca862ffd50826da1ea85258a06fd94552", size = 1319188 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a1/18/0e835c3a557dc5faffc8f91092f62fc337c1dab1066715842e7a4b318ec4/setuptools-80.7.1-py3-none-any.whl", hash = "sha256:ca5cc1069b85dc23070a6628e6bcecb3292acac802399c7f8edc0100619f9009", size = 1200776 },
 ]
 
 [[package]]
