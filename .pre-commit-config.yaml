@@ -1,0 +1,67 @@
+# docs: https://pre-commit.com/#usage
+
+default_install_hook_types: [pre-commit, pre-push]
+
+repos:
+  # TODO: check credentials before commit
+  # TODO: is it possible to sync the latest config without breaking the push?
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0 # `pre-commit autoupdate` to use the latest version
+    hooks:
+      - id: check-added-large-files # built-in hook id
+        name: check large files
+        args: ["--maxkb=5120"] # Set threshold to 5MB
+        stages: [pre-commit]
+  - repo: local
+    hooks:
+      # DOCS: https://pre-commit.com/#creating-new-hooks
+      #
+      # NOTE: 'language' configs the environment where the entry command would be running
+      #        e.g. set it to python only if you are calling a .py script directly
+      # NOTE: 'pass_filenames' defaults to true, commit files would be passed as targets to 'entry'
+      # NOTE: 'types' and 'files' specify the types or files the hook would be tracking
+      # NOTE: 'stages': https://pre-commit.com/#supported-git-hooks
+      # NOTE: lightweight checks are performed here and full checks on CI
+
+      - id: format
+        name: format staged python files
+        language: system
+        types: [python]
+        entry: uv run ruff format
+        stages: [pre-commit]
+        verbose: true
+
+      - id: lint
+        name: lint staged python files
+        language: system
+        types: [python]
+        entry: uv run ruff check
+        args: ["--fix"]
+        stages: [pre-commit]
+        verbose: true
+
+      - id: type-check
+        name: type-check staged python files
+        language: system
+        types: [python]
+        entry: uv run mypy
+        stages: [pre-push]
+        verbose: true
+
+      - id: lockfile
+        name: reconcile deps lockfile
+        language: system
+        pass_filenames: false
+        files: pyproject.toml # only check lockfile when pyproject.toml changed
+        entry: uv lock --check
+        stages: [pre-push]
+        verbose: true
+
+      - id: pytest
+        name: run local python unit tests
+        language: system
+        pass_filenames: false
+        types: [python]
+        entry: just test # run all tests to confirm all affected modules are tested
+        stages: [pre-push]
+        verbose: true

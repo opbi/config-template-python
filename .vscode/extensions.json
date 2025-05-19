@@ -1,0 +1,26 @@
+{
+  "recommendations": [
+    "aaron-bond.better-comments", // comment: syntax highlight
+    "charliermarsh.ruff", // python: linter & formatter
+    "davidanson.vscode-markdownlint", // markdown: linter
+    "editorconfig.editorconfig", // editor: formatter
+    "exiasr.hadolint", // dockerfile: linter
+    "ktnrg45.vscode-cython", // cython: syntax highlight
+    "lewissteele.vscode-sql-lint", // sql: linter
+    "matangover.mypy", // python: type checker
+    "mechatroner.rainbow-csv", // csv: highlight & linter
+    "mgesbert.python-path", // python: import path completion
+    "ms-python.vscode-pylance", // python: language server
+    "ms-toolsai.jupyter-renderers", // jupyter notebook: renderers
+    "nefrob.vscode-just-syntax", // justfile: syntax highlight
+    "njpwerner.autodocstring", // python: docstring helper
+    "njqdev.vscode-python-typehint", // python: type hint completion
+    "qufiwefefwoyn.inline-sql-syntax", // python: inline sql syntax highlight
+    "redhat.vscode-yaml", // yaml: linter
+    "streetsidesoftware.code-spell-checker-french", // spell checker: french dictionary
+    "streetsidesoftware.code-spell-checker-spanish", // spell checker: spanish dictionary
+    "streetsidesoftware.code-spell-checker", // spell checker
+    "tamasfe.even-better-toml", // toml: syntax highlight
+    "z.placeholder-to-avoid-comment-line-shift"
+  ]
+}

@@ -1,0 +1,37 @@
+# NOTE: the syntax except case sensitive is platform agnostic
+# case insensitive: MacOs, Windows
+# case sensitive: Linux
+#
+# syntax:
+# project root: /<expression>, without the anchor expression would be resolved recursively
+# directory: <expression>/
+# single asterisk * : wildcard except directory separator /
+# double asterisk ** : wildcard including directory separator /
+# not operator !
+
+# virtualenv
+/.venv/
+
+# cache
+__pycache__/
+/*cache*
+/*log*
+
+# sensitive
+/*credential*
+/*.env*
+!/.env-template
+/artefacts/*.crt
+
+# test
+/.benchmarks/
+/.coverage*
+!.coveragerc
+/report/
+
+# output
+/output/
+!/output/.gitkeep
+
+# mac specific
+.DS_Store

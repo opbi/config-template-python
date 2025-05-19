@@ -1,0 +1,84 @@
+{
+  /*
+        files settings
+  */
+  // syntax highlight
+  "files.associations": {
+    ".coveragerc": "properties",
+    ".env-cache": "properties",
+    ".env-template": "properties",
+    ".python-version": "properties",
+    "*.ini": "properties" // for better-comment extension support
+  },
+  /*
+        navigator settings
+  */
+  "files.exclude": {
+    // list of files to hide in the navigator
+    ".benchmarks": true,
+    ".coverage": true,
+    ".mypy_cache": true,
+    ".pytest_cache": true,
+    ".ruff_cache": true,
+    "**/__pycache__": true
+  },
+  /*
+        explorer settings
+  */
+  // file nesting
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": false,
+  "explorer.fileNesting.patterns": {
+    ".env": ".env-cache, .env-template",
+    "justfile": ".editorconfig, .pre-commit-config.yaml, .python-version, cspell.config.yaml",
+    "pyproject.toml": ".coveragerc, .git*, azure-pipelines.yml, *.ini, *.toml, *.lock, Dockerfile, kubernetes.yml",
+    "README.md": "*.md"
+  },
+  /*
+        editor settings
+  */
+  // universal editor settings
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit"
+  },
+  // markdown specific settings
+  "[markdown]": {
+    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
+  },
+  // json specific settings
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  // json with comments specific settings
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  // python linter&formatter ruff settings: https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit", // fix lint errors on save
+      "source.organizeImports": "explicit" // organize imports on save
+    }
+  },
+  // python notebook specific settings
+  "notebook.formatOnSave.enabled": true,
+  "notebook.codeActionsOnSave": {
+    "notebook.source.fixAll": "explicit",
+    "notebook.source.organizeImports": "explicit" // TODO: to be fixed
+  },
+  // python language server settings
+  "mypy.runUsingActiveInterpreter": true,
+  "python.languageServer": "Pylance",
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.typeCheckingMode": "off", // use mypy for type checking only
+  // python testing settings
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  // yaml specific settings
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "redhat.telemetry.enabled": false
+}
