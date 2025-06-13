@@ -44,9 +44,9 @@ repos:
         name: reconcile deps lockfile
         language: system
         pass_filenames: false
-        files: pyproject.toml # only check lockfile when pyproject.toml changed
-        entry: uv lock --check
-        stages: [pre-push]
+        files: pyproject.toml # update lockfile when pyproject.toml changed
+        entry: uv lock
+        stages: [pre-commit]
         verbose: true
 
       - id: type-check
