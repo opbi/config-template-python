@@ -272,53 +272,52 @@ cleanup *FLAGS:
     rm README.md && echo "# $PROJECT_NAME" > README.md
     just _set_project_name
 
-@_config_repo_update:
+@_template_repo_sync:
     echo "sync config repo to origin/main"
     git -C $CONFIG_TEMPLATE_PATH checkout -q main
     git -C $CONFIG_TEMPLATE_PATH pull -q
 
-@_copy_root_config_files:
+@_copy_template_config_files DESTINATION:
     find "$CONFIG_TEMPLATE_PATH" -maxdepth 1 -type f \
         \( -name '.*' \
             -o -iname '*.yaml' -o -iname '*.yml' \
             -o -iname '*.ini'  -o -iname '*.toml' \) \
          ! -name 'pyproject.toml' \
          ! -name '.env-template.toml' \
-         -exec cp -p {} . \;
+         -exec cp -p {} "$DESTINATION" \;
 
-# append repo specific mypy config to mypy.ini
-@_mypy_config:
-    if [ -f config/mypy.ini ]; then cat config/mypy.init >> .config/mypy.ini; fi
+@_strip_repo_specific_config DIR='_config':
+    START_MARK="# \* <- repo specific config start:"; \
+    END_MARK="# \* repo specific config end ->"; \
+    find "$DIR" -maxdepth 1 -type f -print0 | \
+    while IFS= read -r -d '' file; do \
+        sed -e "/${START_MARK}/,/${END_MARK}/d" "$file" > "$file.tmp"; \
+    done
 
-@_cspell_config:
-    cat cspell.local.yaml >> cspell.config.yaml
-    just _use_first_occurrence cspell.config.yaml
-    rm cspell.local.yaml
+@_reconcile_cspell:
+    cat cspell.config.yaml >> _config/cspell.config.yaml
+    just _use_first_occurrence _config/cspell.config.yaml
 
 # copy the latest config files from CONFIG_TEMPLATE_PATH#main
 [group('template')]
 @config:
-    just _config_repo_update
-
-    # backup local config files
-    mv cspell.config.yaml cspell.local.yaml
+    just _template_repo_sync
 
     echo "coping config files from $CONFIG_TEMPLATE_PATH"
     -cp -r $CONFIG_TEMPLATE_PATH/.vscode .
-    just _copy_root_config_files
+    mkdir -p _config && just _copy_root_config_files _config
+    just _strip_repo_specific_config _config
 
     echo "reconcile local config with template config"
-    just _cspell_config
-    # copy config files stripped of template specific settings
-    -cp -r $CONFIG_TEMPLATE_PATH/.config .
-    just _mypy_config
-    -cp -a .config/. .
+    just _reconcile_cspell
+    cp -a _config/. .
+    rm -rf _config
 
 # copy the latest shared lib from CONFIG_TEMPLATE_PATH#main
 [group('template')]
 @shared:
     echo "coping /shared from $CONFIG_TEMPLATE_PATH"
-    just _config_repo_update
+    just _template_repo_sync
     rm -rf ./src/shared
     cp -r $CONFIG_TEMPLATE_PATH/src/shared ./src
 
