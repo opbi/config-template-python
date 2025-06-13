@@ -163,6 +163,11 @@ cleanup *FLAGS:
 @type-check:
     uv run mypy src
 
+# check if lockfile is up to date
+[group('quality')]
+@lockfile-check:
+    uv lock --check
+
 # run pre-commit hooks manually
 [group('quality')]
 @pre-commit:

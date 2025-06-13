@@ -1,4 +1,5 @@
 # uv dependencies syntax: https://docs.astral.sh/uv/concepts/projects/dependencies/#index
+# uv supports dependency sources of [index, git, url, path, workspace]
 
 [tool.uv]
 package = false

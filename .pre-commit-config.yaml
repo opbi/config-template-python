@@ -27,7 +27,7 @@ repos:
         name: format staged python files
         language: system
         types: [python]
-        entry: uv run ruff format
+        entry: just format
         stages: [pre-commit]
         verbose: true
 
@@ -35,7 +35,7 @@ repos:
         name: lint staged python files
         language: system
         types: [python]
-        entry: uv run ruff check
+        entry: just lint
         args: ["--fix"]
         stages: [pre-commit]
         verbose: true
@@ -44,7 +44,7 @@ repos:
         name: type-check staged python files
         language: system
         types: [python]
-        entry: uv run mypy
+        entry: just type-check
         stages: [pre-push]
         verbose: true
 
@@ -53,7 +53,7 @@ repos:
         language: system
         pass_filenames: false
         files: pyproject.toml # only check lockfile when pyproject.toml changed
-        entry: uv lock --check
+        entry: just lockfile-check
         stages: [pre-push]
         verbose: true
 
