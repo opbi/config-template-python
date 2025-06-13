@@ -37,7 +37,7 @@
 set ignore-comments := true
 # load .env file
 set dotenv-load := true
-# export env vars
+# export env variables
 set export := true
 # -u to throw errors for unset variables
 # -c so that string commands can be run
@@ -81,6 +81,7 @@ LOCAL_TEST_SCOPE := "not complex and not benchmark and not online"
         if [ -f ".env-cache" ]; then cat .env-cache >> .env; fi; \
         just _use_last_key_value .env; \
         echo "new .env created:"; \
+        sort .env -o .env; \
         cat .env; \
     fi
 
@@ -162,11 +163,6 @@ cleanup *FLAGS:
 [group('quality')]
 @type-check:
     uv run mypy src
-
-# check if lockfile is up to date
-[group('quality')]
-@lockfile-check:
-    uv lock --check
 
 # run pre-commit hooks manually
 [group('quality')]
@@ -264,87 +260,63 @@ cleanup *FLAGS:
 #   RECIPE GROUP - Template
 #
 
+@_set_project_name:
+    template_name=$(basename $CONFIG_TEMPLATE_PATH)
+    sed -i "s|${template_name}|${PROJECT_NAME}|g" pyproject.toml
+
 # remove all the template files when init a repo
 [group('template')]
 @_init:
-    -rm -rf src/api
-    -rm -rf src/lib
-    -rm -rf src/service
-    -rm -rf src/data.py
-    -rm -rf tests/__fixtures__/*
-    -rm -rf tests/api
-    -rm -rf tests/lib
-    -rm -rf tests/service
-    -rm -rf tests/shared
-    -rm -rf tests/test_args.py
-    rm README.md
-    echo "# $PROJECT_NAME" > README.md
-    just env
+    find src ! -name "__init__.py" -mindepth 1 -delete
+    find tests ! -name "__init__.py" -mindepth 1 -delete
+    rm README.md && echo "# $PROJECT_NAME" > README.md
+    just _set_project_name
+
+@_config_repo_update:
+    # update the config repo to the latest commit
+    git -C $CONFIG_TEMPLATE_PATH checkout -q main
+    git -C $CONFIG_TEMPLATE_PATH pull -q
+
+@_copy_root_config_files:
+    find "$CONFIG_TEMPLATE_PATH" -maxdepth 1 -type f \
+        \( -name '.*' \
+            -o -iname '*.yaml' -o -iname '*.yml' \
+            -o -iname '*.ini'  -o -iname '*.toml' \) \
+         ! -name 'pyproject.toml' \
+         -exec cp -p {} . \;
+
+# append repo specific mypy config to mypy.ini
+@_mypy_config:
+    if [ -f config/mypy.ini ]; then cat config/mypy.init >> .config/mypy.ini; fi
+
+@_cspell_config:
+    cat cspell.local.yaml >> cspell.config.yaml
+    just _use_first_occurrence cspell.config.yaml
 
 # copy the latest config files from CONFIG_TEMPLATE_PATH#main
 [group('template')]
 @config:
-    echo "coping config files from $CONFIG_TEMPLATE_PATH#main"
-    # check out template repo and pull the latest config
-    git -C $CONFIG_TEMPLATE_PATH checkout -q main
-    git -C $CONFIG_TEMPLATE_PATH pull -q
-    # create the convention folders if not exists
-    mkdir -p ./output
-    touch ./output/.gitkeep
-    mkdir -p ./artefacts
-    touch ./artefacts/.gitkeep
-    # copy the folders and files
+    echo "coping config files from $CONFIG_TEMPLATE_PATH"
+    just _config_repo_update
+
     cp -r $CONFIG_TEMPLATE_PATH/.vscode .
-    # cp $CONFIG_TEMPLATE_PATH/.env-template .
 
-    cp $CONFIG_TEMPLATE_PATH/justfile .
-    cp $CONFIG_TEMPLATE_PATH/.editorconfig .
-    cp $CONFIG_TEMPLATE_PATH/.pre-commit-config.yaml .
-    # cp $CONFIG_TEMPLATE_PATH/cspell.config.yaml .
+    mv cspell.config.yaml cspell.local.yaml
+    just _copy_root_config_files
+    just _cspell_config
 
-    # cp $CONFIG_TEMPLATE_PATH/pyproject.toml .
-    cp $CONFIG_TEMPLATE_PATH/.coveragerc .
-    cp $CONFIG_TEMPLATE_PATH/.gitattributes .
-    cp $CONFIG_TEMPLATE_PATH/.gitignore .
-    cp $CONFIG_TEMPLATE_PATH/.python-version .
-    cp $CONFIG_TEMPLATE_PATH/azure-pipelines.yml .
-    # cp $CONFIG_TEMPLATE_PATH/Dockerfile .
-    cp $CONFIG_TEMPLATE_PATH/mypy.ini .
-    cp $CONFIG_TEMPLATE_PATH/pytest.ini .
-    cp $CONFIG_TEMPLATE_PATH/ruff.toml .
-
-# remove all the template files that could be copied
-[group('template')]
-@eject:
-    rm -rf .vscode
-
-    rm -rf .pre-commit-config.yaml
-    # rm -rf cspell.config.yaml
-
-    rm -rf .coveragerc
-    rm -rf .gitattributes
-    rm -rf .gitignore
-    rm -rf .python-version
-    rm -rf azure-pipelines.yml
-    # rm -rf Dockerfile
-    rm -rf mypy.ini
-    rm -rf pytest.ini
-    rm -rf ruff.toml
+    # copy config files stripped of template specific settings
+    -cp -r $CONFIG_TEMPLATE_PATH/.config .
+    just _mypy_config
+    -cp -a .config/. .
 
 # copy the latest shared lib from CONFIG_TEMPLATE_PATH#main
 [group('template')]
 @shared:
-    echo "coping /shared from $CONFIG_TEMPLATE_PATH#main"
-    git -C $CONFIG_TEMPLATE_PATH checkout -q main
-    git -C $CONFIG_TEMPLATE_PATH pull -q
+    echo "coping /shared from $CONFIG_TEMPLATE_PATH"
+    just _config_repo_update
     rm -rf ./src/shared
     cp -r $CONFIG_TEMPLATE_PATH/src/shared ./src
-
-# sync config and shared lib with the latest from $CONFIG_TEMPLATE_PATH
-[group('template')]
-@sync:
-    just config
-    just shared
 
 
 ## UTILITY RECIPES
@@ -355,4 +327,10 @@ cleanup *FLAGS:
     # $1 is the key name before =, $0 is the whole line, stored in an associative array `lines`
     awk -F= 'NF && $1 {lines[$1] = $0} END {for (key in lines) print lines[key]}' {{file}} > {{file}}.tmp
     mv {{file}}.tmp {{file}}
-    sort {{file}} -o {{file}}
+
+# keep the first occurrence of each line in the file, drop empty lines
+@_use_first_occurrence file:
+    # -F= use = as the separator, NF checks for non-empty lines
+    # $1 is the key name before =, $0 is the whole line, stored in an associative array `lines`
+    awk '!seen[$0]++ {print}' {{file}} > {{file}}.tmp
+    mv {{file}}.tmp {{file}}

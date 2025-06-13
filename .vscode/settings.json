@@ -27,8 +27,8 @@
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {
     ".env": ".env-cache, .env-template",
-    "justfile": ".editorconfig, .pre-commit-config.yaml, .python-version, cspell.config.yaml",
-    "pyproject.toml": ".coveragerc, .git*, azure-pipelines.yml, *.ini, *.toml, *.lock, Dockerfile, kubernetes.yml",
+    "justfile": ".editorconfig, .pre-commit-config.yaml, cspell.config.yaml",
+    "pyproject.toml": ".coveragerc, .git*, .python-version, azure-pipelines.yml, *.ini, *.toml, *.lock, Dockerfile, kubernetes.yml",
     "README.md": "*.md"
   },
   /*
