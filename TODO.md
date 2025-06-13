@@ -1,16 +1,5 @@
 # TODOs
 
-## Fixes
-
-* CI build should distinguish PR or main branch
-  * only push :latest on main branch
-
-## Operation
-
-* update python version to 3.11 in all repos
-* confirm only install dev dependencies for code quality check in CI is sufficient
-* confirm if cleaning up old images in ACR is necessary (is there a setting there already?)
-
 ## Possible Further Features
 
 ### 1. Better Automated Sync Mechanism
@@ -44,7 +33,6 @@
 
 * `just python-version <version>`?
 * .python-version
-* Dockerfile args?
 * azure-pipelines args?
 * ruff.toml manual?
 * pyproject.toml manual?

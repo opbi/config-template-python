@@ -11,10 +11,10 @@
     "*.ini": "properties" // for better-comment extension support
   },
   /*
-        navigator settings
+        explorer settings
   */
+  // list of files to hide
   "files.exclude": {
-    // list of files to hide in the navigator
     ".benchmarks": true,
     ".coverage": true,
     ".mypy_cache": true,
@@ -22,9 +22,6 @@
     ".ruff_cache": true,
     "**/__pycache__": true
   },
-  /*
-        explorer settings
-  */
   // file nesting
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
@@ -58,15 +55,15 @@
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff",
     "editor.codeActionsOnSave": {
-      "source.fixAll": "explicit", // fix lint errors on save
-      "source.organizeImports": "explicit" // organize imports on save
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
     }
   },
   // python notebook specific settings
   "notebook.formatOnSave.enabled": true,
   "notebook.codeActionsOnSave": {
     "notebook.source.fixAll": "explicit",
-    "notebook.source.organizeImports": "explicit" // TODO: to be fixed
+    "notebook.source.organizeImports": "explicit"
   },
   // python language server settings
   "mypy.runUsingActiveInterpreter": true,
@@ -80,5 +77,12 @@
   "[yaml]": {
     "editor.defaultFormatter": "redhat.vscode-yaml"
   },
-  "redhat.telemetry.enabled": false
+  "redhat.telemetry.enabled": false,
+  // toml specific settings
+  "evenBetterToml.formatter.allowedBlankLines": 1,
+  "evenBetterToml.formatter.columnWidth": 80,
+  "evenBetterToml.formatter.reorderInlineTables": true,
+  "evenBetterToml.formatter.reorderArrays": true,
+  "evenBetterToml.formatter.inlineTableExpand": true,
+  "evenBetterToml.formatter.arrayAutoExpand": true
 }

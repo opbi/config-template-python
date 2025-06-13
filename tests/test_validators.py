@@ -34,6 +34,7 @@ class TestOrderData:
         data = OrderData.model_validate_json(nested_order_data)
         assert data.order == order
 
+    @pytest.mark.online
     @patch("src.validators.storage.read_file", return_value=order)
     def test_order_with_blob_fallback(self, _storage_read):
         """Should fallback to read order data from blob storage.

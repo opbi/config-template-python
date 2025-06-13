@@ -1,70 +1,107 @@
-# ------------------------------------- NOTES ------------------------------------- #
-
-## LINKS
+# LINKS
 #
-# * justfile docs: https://just.systems/man/en/
-# * cheat sheet: https://cheatography.com/linux-china/cheat-sheets/justfile/
-
-## DIFFERENT SYNTAXES - INSIDE/OUTSIDE RECIPE
+# justfile docs: https://just.systems/man/en/
+# cheat sheet: https://cheatography.com/linux-china/cheat-sheets/justfile/
 #
-# justfile syntax applies outside recipe (command level), shell syntax applies within recipe
+# FUNCTIONS
 #
-# example - reference variable
-# outside recipe - referenced by VAR_NAME: `PROJECT_NAME := file_stem(PYTHONPATH)`
-# inside recipe - referenced by $VAR_NAME: `ipykernel install --name $PROJECT_NAME`
-
-## FUNCTIONS
 # justfile functions are preferred over shell functions for cross-platform compatibility
 # justfile function docs: https://just.systems/man/en/chapter_31.html
-
-## TIPS
+#
+# FEATURES
+#
 # - prepend hyphen to command to ignore errors: https://just.systems/man/en/chapter_30.html
 #   e.g. `-rm .env` wouldn't throw error if .env file doesn't exist
 #
 # - variadic parameters *PARAMETERS accepts zero ro more arguments, passing them as string
 #   e.g. *FLAGS, *PARAMETERS, $FLAGS, $PARAMETERS to access
-
-# ----------------------------------------------------------------------------------- #
+#
+# CAVEATS - DIFFERENT SYNTAXES INSIDE/OUTSIDE RECIPE
+#
+#  - outside recipe: just syntax, e.g. `PROJECT_NAME := file_stem(PYTHONPATH)` [referenced by VAR_NAME]
+#  - inside recipe: shell syntax, e.g. `ipykernel install --name $PROJECT_NAME` [referenced by $VAR_NAME]
+#    - inside recipe, use "$VAR_NAME" to interpolate strings correctly
+#
+# CAVEATS - RECIPE NAME
+#
+# - recipe name with leading underscore `_` is private, e.g. `@_env_clean` is not listed in `just --list`
+# - recipe name can't start with a dot, e.g. `@.env` is not valid
+#
+# -----------------------------------------------------------------------------------------------
 
 #
-## SETUP
+#   SETUP
 #
 
 ### CONFIG
-set ignore-comments
-set dotenv-load # load .env file
-set export # export env vars
-set shell := ["bash", "-uc"] # -u to throw errors for unset variables, -c so that string commands can be run
+set ignore-comments := true
+# load .env file
+set dotenv-load := true
+# export env vars
+set export := true
+# -u to throw errors for unset variables
+# -c so that string commands can be run
+set shell := ["bash", "-uc"]
 set windows-shell := ["bash", "-uc"]
 
-### VARS
+### VARIABLES
 PYTHONPATH := invocation_directory()
 PROJECT_NAME := file_stem(PYTHONPATH)
+LOCAL_TEST_SCOPE := "not complex and not benchmark and not online"
 
-#
-## COMMANDS - Development
-#
+### default recipe #keep on top
 
 # list available commands
-[group('dev')]
-@default:
+@list:
     just --list --unsorted
 
-### Install
-@_install_python:
-    uv python install
+#
+#   RECIPE GROUP - DEVELOPMENT
+#
 
-# install python, create .env, install packages & pre-commit hooks
+### Install
+
+# install python, create .env, install deps & pre-commit hooks
 [group('dev')]
 @install:
-    just _install_python
+    uv python install
     just env
     uv lock --upgrade
     uv sync
     uv run pre-commit install --install-hooks # --install-hooks setup pre-commit cache
     uv run nbstripout --install --python .venv/bin/python
 
+# create the default .env from template and cache, -f to create new .env file
+[group('dev')]
+@env *FLAGS:
+    # remove existing .env file if -f is set
+    if [ "$FLAGS" = "-f" ]; then rm -f .env; fi; \
+    if [ -f ".env" ]; then echo "existing .env found:"; cat .env; else \
+        cp .env-template .env; echo "" >> .env; \
+        if [ -f ".env-cache" ]; then cat .env-cache >> .env; fi; \
+        just _use_last_key_value .env; \
+        echo "new .env created:"; \
+        cat .env; \
+    fi
+
 ### Cleanup
+
+# remove .venv, python & tooling cache, test reports; -a to remove .env, run & test output
+[confirm("cleanup .venv, build & tooling caches? (y/n)")]
+[group('dev')]
+cleanup *FLAGS:
+    if [ "$FLAGS" == "-a" ]; then \
+        -uv run nbstripout --uninstall; \
+        -uv run pre-commit uninstall; \
+        just _cleanup_test_report; \
+        just _cleanup_output; \
+        rm -f .env; \
+    fi; \
+    just _cleanup_tooling_cache
+    just _cleanup_pycache
+    just _cleanup_cython
+    just _cleanup_rust
+    rm -rf .venv/
 
 @_cleanup_output:
     rm -rf output/**
@@ -81,8 +118,8 @@ PROJECT_NAME := file_stem(PYTHONPATH)
     rm -rf .pytest_cache
     rm -rf .ruff_cache
 
+# bash doesn't support recursive ** resolution
 @_cleanup_pycache:
-    # bash doesn't support recursive ** resolution
     rm -rf src/__pycache__
     rm -rf src/**/__pycache__
     rm -rf tests/__pycache__
@@ -97,63 +134,53 @@ PROJECT_NAME := file_stem(PYTHONPATH)
 @_cleanup_rust:
     rm -rf rust/target/
 
-# remove .venv, python & tooling cache, test reports; -a to remove .env, run & test output
-[group('dev')]
-[confirm("cleanup .venv, build & tooling caches? (y/n)")]
-cleanup *FLAGS:
-    if [ "$FLAGS" == "-a" ]; then \
-        -uv run nbstripout --uninstall; \
-        -uv run pre-commit uninstall; \
-        just _cleanup_test_report; \
-        just _cleanup_output; \
-        rm -f .env; \
-    fi; \
-    just _cleanup_tooling_cache
-    just _cleanup_pycache
-    just _cleanup_cython
-    just _cleanup_rust
-    rm -rf .venv/
-
-### Check
-
-# format code using ruff
-[group('dev')]
-@format:
-    uv run ruff format src tests
-
-# lint code using ruff
-[group('dev')]
-@lint:
-    uv run ruff check src tests --fix
-
-# run mypy type checks
-[group('dev')]
-@type-check:
-    uv run mypy src
+#
+#   RECIPE GROUP - Code Quality
+#
 
 # run code quality checks
-[group('dev')]
+[group('quality')]
 @check:
     just format lint type-check
 
 # run code quality checks with file watcher
-[group('dev')]
+[group('quality')]
 @check-watch:
     watchexec -n -r -w src -w tests -w mypy.ini -w ruff.toml --clear -- just check
 
+# format code using ruff
+[group('quality')]
+@format:
+    uv run ruff format src tests
+
+# lint code using ruff
+[group('quality')]
+@lint:
+    uv run ruff check src tests --fix
+
+# run mypy type checks
+[group('quality')]
+@type-check:
+    uv run mypy src
+
 # run pre-commit hooks manually
-[group('dev')]
+[group('quality')]
 @pre-commit:
     uv run pre-commit run --hook-stage pre-commit
 
 # run pre-push hooks manually
-[group('dev')]
+[group('quality')]
 @pre-push:
     uv run pre-commit run --hook-stage pre-push
 
+## RECIPE GROUP - CREDENTIALS
+
+# TODO
+@_fetch_credentials:
+    echo "fetching credentials from remote sources"
 
 #
-## COMMANDS - Test
+#   RECIPE GROUP - Test
 #
 
 # run the src as a module, cli arguments can be passed
@@ -161,39 +188,31 @@ cleanup *FLAGS:
 @run *PARAMETERS:
     uv run dotenv run -- python -m src $PARAMETERS
 
-# run simple test cases (exclude complex and benchmark tests)
+# run test cases with scope
 [group('test')]
-@test:
-    uv run pytest tests/ -vv -s -m "not complex and not benchmark"
+@test SCOPE=LOCAL_TEST_SCOPE:
+    uv run pytest tests/ -vv -s -m "$SCOPE"
 
-# run all tests
+# run test coverage with scope
 [group('test')]
-@test-all:
-    uv run pytest tests/ -vv -s
+@test-coverage SCOPE=LOCAL_TEST_SCOPE:
+    uv run pytest tests/ -vv -s -m "$SCOPE" --cov=src --cov-report=term-missing
 
-# run test with coverage report (exclude benchmark tests)
+# run test on changed files with scope
 [group('test')]
-@test-coverage:
-    uv run pytest tests/ -vv -s -m "not benchmark" \
-    --cov=src --cov-report=term-missing
-
-
-# run test files changed since last commit with file watcher, flags can be passed to pytest
-[group('test')]
-@test-watch *FLAGS:
+@test-watch SCOPE=LOCAL_TEST_SCOPE:
     # watchexec config details
     # -n: don't spawn another shell for speed
     # -r: restart the process on busy update
     watchexec -nr -w src -w tests -e py --clear -- \
-        uv run pytest tests/ -vv -s --picked \
+        uv run pytest tests/ -vv -s -m "$SCOPE" --picked \
         --cov=src \
         --cov-report=term-missing \
         --benchmark-columns=mean,median,max,stddev,rounds,iterations \
         --benchmark-sort=mean \
-        $FLAGS
 
 #
-## COMMANDS - Docker
+#   RECIPE GROUP - Docker
 #
 
 # build the docker image
@@ -208,13 +227,13 @@ cleanup *FLAGS:
 @docker-run *PARAMETERS:
     docker run --env-file .env -v ./output:/output $PROJECT_NAME python -m src $PARAMETERS
 
-# run the tests in docker image (exclude benchmark tests)
+# run the tests in docker image
 [group('docker')]
-@docker-test:
-    docker run --env-file .env $PROJECT_NAME pytest tests/ -vv -s -m "not benchmark"
+@docker-test SCOPE=LOCAL_TEST_SCOPE:
+    docker run --env-file .env $PROJECT_NAME pytest tests/ -vv -s -m "$SCOPE"
 
 #
-## COMMANDS - Cython
+#   RECIPE GROUP - Cython
 #
 
 # build cython script
@@ -228,7 +247,7 @@ cleanup *FLAGS:
     -uv run cython-lint src --max-line-length 110
 
 #
-## COMMANDS - Rust
+#   RECIPE GROUP - Rust
 #
 
 # build rust script
@@ -237,7 +256,7 @@ cleanup *FLAGS:
     maturin develop --manifest-path=rust/Cargo.toml
 
 #
-## COMMANDS - Template
+#   RECIPE GROUP - Template
 #
 
 # remove all the template files when init a repo
@@ -323,30 +342,12 @@ cleanup *FLAGS:
     just shared
 
 
-#
-## COMMANDS - EnvVars & Credentials
-#
+## UTILITY RECIPES
 
-@_env_clean:
-    # remove duplicate lines and empty lines in .env
-    awk -F= 'NF && $1 {lines[$1] = $0} END {for (name in lines) print lines[name]}' .env > .env.tmp && mv .env.tmp .env
-    sort .env -o .env
-
-# NOTE: command can't start with .
-# create the default .env from template and cache, -f to create new .env file
-[group('credentials')]
-@env *FLAGS:
-    # remove existing .env file if -f is set
-    if [ "$FLAGS" = "-f" ] && [ -f ".env" ]; then \
-        rm .env; \
-    fi; \
-    if [ ! -f ".env" ]; then \
-        cp .env-template .env; \
-        echo "" >> .env; \
-        if [ -f .env-cache ]; then cat .env-cache >> .env; fi; \
-        just _env_clean; \
-        echo "new .env file created:"; \
-        cat .env; \
-    else \
-        echo ".env file already exists."; \
-    fi
+# keep the last occurrence of each line in the file, drop empty lines
+@_use_last_key_value file:
+    # -F= use = as the separator, NF checks for non-empty lines
+    # $1 is the key name before =, $0 is the whole line, stored in an associative array `lines`
+    awk -F= 'NF && $1 {lines[$1] = $0} END {for (key in lines) print lines[key]}' {{file}} > {{file}}.tmp
+    mv {{file}}.tmp {{file}}
+    sort {{file}} -o {{file}}

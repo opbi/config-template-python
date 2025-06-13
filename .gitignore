@@ -21,7 +21,7 @@ __pycache__/
 /*credential*
 /*.env*
 !/.env-template
-/artefacts/*.crt
+**.crt
 
 # test
 /.benchmarks/

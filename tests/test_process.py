@@ -11,6 +11,7 @@ from tests.__fixtures__.order import order
 mute_print = patch("builtins.print")
 
 
+@pytest.mark.online
 @patch("src.process.storage.save_file")
 @patch("src.process.file.save_json")
 @patch("src.process.get_order", return_value=order)
@@ -49,6 +50,7 @@ class TestGetOrderProcess:
         )
 
 
+@pytest.mark.online
 @patch("src.process.storage.save_file")
 @patch("src.process.file.save_json")
 @mute_print

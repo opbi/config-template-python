@@ -1,5 +1,5 @@
 version: "0.2"
-language: en-GB, fr, es
+language: en-GB
 words:
   - arange
   - argmax
