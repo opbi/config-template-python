@@ -273,7 +273,7 @@ cleanup *FLAGS:
     just _set_project_name
 
 @_config_repo_update:
-    # update the config repo to the latest commit
+    echo "sync config repo to origin/main"
     git -C $CONFIG_TEMPLATE_PATH checkout -q main
     git -C $CONFIG_TEMPLATE_PATH pull -q
 
@@ -283,6 +283,7 @@ cleanup *FLAGS:
             -o -iname '*.yaml' -o -iname '*.yml' \
             -o -iname '*.ini'  -o -iname '*.toml' \) \
          ! -name 'pyproject.toml' \
+         ! -name '.env-template.toml' \
          -exec cp -p {} . \;
 
 # append repo specific mypy config to mypy.ini
@@ -292,19 +293,22 @@ cleanup *FLAGS:
 @_cspell_config:
     cat cspell.local.yaml >> cspell.config.yaml
     just _use_first_occurrence cspell.config.yaml
+    rm cspell.local.yaml
 
 # copy the latest config files from CONFIG_TEMPLATE_PATH#main
 [group('template')]
 @config:
-    echo "coping config files from $CONFIG_TEMPLATE_PATH"
     just _config_repo_update
 
-    cp -r $CONFIG_TEMPLATE_PATH/.vscode .
-
+    # backup local config files
     mv cspell.config.yaml cspell.local.yaml
-    just _copy_root_config_files
-    just _cspell_config
 
+    echo "coping config files from $CONFIG_TEMPLATE_PATH"
+    -cp -r $CONFIG_TEMPLATE_PATH/.vscode .
+    just _copy_root_config_files
+
+    echo "reconcile local config with template config"
+    just _cspell_config
     # copy config files stripped of template specific settings
     -cp -r $CONFIG_TEMPLATE_PATH/.config .
     just _mypy_config
