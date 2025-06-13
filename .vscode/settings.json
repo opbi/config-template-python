@@ -80,7 +80,7 @@
   "redhat.telemetry.enabled": false,
   // toml specific settings
   "evenBetterToml.formatter.allowedBlankLines": 1,
-  "evenBetterToml.formatter.columnWidth": 80,
+  "evenBetterToml.formatter.columnWidth": 60,
   "evenBetterToml.formatter.reorderInlineTables": true,
   "evenBetterToml.formatter.reorderArrays": true,
   "evenBetterToml.formatter.inlineTableExpand": true,

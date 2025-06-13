@@ -277,26 +277,32 @@ cleanup *FLAGS:
     git -C $CONFIG_TEMPLATE_PATH checkout -q main
     git -C $CONFIG_TEMPLATE_PATH pull -q
 
-@_copy_template_config_files DESTINATION:
+@_copy_template_config_files DESTINATION='_config':
+    mkdir -p "$DESTINATION" && \
     find "$CONFIG_TEMPLATE_PATH" -maxdepth 1 -type f \
-        \( -name '.*' \
-            -o -iname '*.yaml' -o -iname '*.yml' \
-            -o -iname '*.ini'  -o -iname '*.toml' \) \
-         ! -name 'pyproject.toml' \
-         ! -name '.env-template.toml' \
-         -exec cp -p {} "$DESTINATION" \;
+        \( -name '.editorconfig' \
+         -o -name '.coveragerc' \
+         -o -name '.git*' \
+         -o -name '.python-version*' \
+         -o -iname '*.yaml' \
+         -o -iname '*.yml' \
+         -o -iname '*.ini' \
+         -o -iname '*.toml' \) \
+        ! -name 'pyproject.toml' \
+        -exec cp -p {} "$DESTINATION/" \;
 
 @_strip_repo_specific_config DIR='_config':
     START_MARK="# \* <- repo specific config start:"; \
     END_MARK="# \* repo specific config end ->"; \
     find "$DIR" -maxdepth 1 -type f -print0 | \
     while IFS= read -r -d '' file; do \
-        sed -e "/${START_MARK}/,/${END_MARK}/d" "$file" > "$file.tmp"; \
+        echo "stripping $file"; \
+        sed -e "/${START_MARK}/,/${END_MARK}/d" "$file" > "$file.tmp" && mv "$file.tmp" "$file"; \
     done
 
-@_reconcile_cspell:
-    cat cspell.config.yaml >> _config/cspell.config.yaml
-    just _use_first_occurrence _config/cspell.config.yaml
+@_reconcile_cspell DIR='_config':
+    cat cspell.config.yaml >> "$DIR"/cspell.config.yaml
+    just _use_first_occurrence "$DIR"/cspell.config.yaml
 
 # copy the latest config files from CONFIG_TEMPLATE_PATH#main
 [group('template')]
@@ -305,7 +311,7 @@ cleanup *FLAGS:
 
     echo "coping config files from $CONFIG_TEMPLATE_PATH"
     -cp -r $CONFIG_TEMPLATE_PATH/.vscode .
-    mkdir -p _config && just _copy_root_config_files _config
+    just _copy_template_config_files _config
     just _strip_repo_specific_config _config
 
     echo "reconcile local config with template config"
